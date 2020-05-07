@@ -94,8 +94,14 @@ instance Monad k => Monad (StateT s k) where
     (a -> StateT s k b)
     -> StateT s k a
     -> StateT s k b
-  (=<<) =
-    error "todo: Course.StateT (=<<)#instance (StateT s k)"
+  f =<< StateT m =      -- m :: s -> k (a, s)
+    let rs = \s ->
+          let ms = m s  -- k (a, s)
+              ap (a', s') = (runStateT $ f a') s'    -- a' :: a, f a' :: StateT s k b
+                                                     -- k (b, s), hence
+                                                     -- ap :: (a, s) -> k (b, s)
+          in ap =<< ms
+    in StateT rs
 
 -- | A `State'` is `StateT` specialised to the `ExactlyOne` functor.
 type State' s a =
