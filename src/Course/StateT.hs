@@ -202,8 +202,13 @@ distinct' ::
   Ord a =>
   List a
   -> List a
-distinct' =
-  error "todo: Course.StateT#distinct'"
+distinct' aas =  -- aas :: List a
+  let init_state = S.empty :: S.Set a
+      -- k is State' (S.Set a) :: * -> *
+      f :: Ord a => a -> State' (S.Set a) Bool   -- :: a -> k Bool
+      f a' = state' $ \s' -> (not $ S.member a' s', S.insert a' s')
+      res = filtering f aas  -- k (List a), hence State' (S.Set a) (List a)
+  in eval' res init_state
 
 -- | Remove all duplicate elements in a `List`.
 -- However, if you see a value greater than `100` in the list,
