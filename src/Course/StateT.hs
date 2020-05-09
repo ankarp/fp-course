@@ -400,13 +400,14 @@ distinctG ::
 
 -- ankarp: study
 distinctG x =
-  let f a = StateT (\s ->
-                      OptionalT (if a > 100
-                                 then
-                                   log1 (fromString ("aborting > 100: " P.++ show a)) Empty
-                                 else (if even a
-                                       then log1 (fromString ("even number: " P.++ show a))
-                                       else pure) (Full (a `S.notMember` s, a `S.insert` s))))
+  let f a = StateT rs
+        where rs s =
+                OptionalT (if a > 100
+                          then
+                            log1 (fromString ("aborting > 100: " P.++ show a)) Empty
+                          else (if even a
+                                 then log1 (fromString ("even number: " P.++ show a))
+                                 else pure) (Full (a `S.notMember` s, a `S.insert` s)))
       res = filtering f x
       val = evalT res S.empty
   in runOptionalT val
