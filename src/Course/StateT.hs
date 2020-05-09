@@ -402,16 +402,42 @@ distinctG ::
 distinctG x =
   let f a = StateT rs
         where rs s =
+                -- log1 :: l a' -> Logger l a'
+                -- OptionalT ~ k (Optional a')
+                -- rs :: s -> OptionalT (Logger Char) (a, s)
+                -- where
+                -- k = (Logger Char)
+                -- s = S.Set a
+                -- a' = (a, s)
+                -- x :: List a
+                -- filtering :: (a -> k Bool) (List a) -> k (List a)
+                -- so need to establish: f :: a -> k Bool
+                -- know:
+                -- f a :: StateT s' k' a'
+                -- where 
+                -- where OptionalT ((Logger Char) (Bool, s)), so
+                -- k' = (OptionalT . (Logger Char))
+                -- = (k Bool) where
+                -- k c = OptionalT ((Logger Char) (c, s))
                 OptionalT (if a > 100
                           then
                             log1 (fromString ("aborting > 100: " P.++ show a)) Empty
                           else (if even a
                                  then log1 (fromString ("even number: " P.++ show a))
                                  else pure) (Full (a `S.notMember` s, a `S.insert` s)))
-      res = filtering f x
+      res = filtering f x  -- k'' (List a), hence (OptionalT (Logger l)) (List a)
+      -- so (Logger l) play the role of k in `OptionalT k` is a functor.
+      -- where k'' c = State s' k' c and k'' is a functor with
+      -- k' = (OptionalT . (Logger Char))
+      -- evalT ::
+      --   Functor k =>
+      --   StateT s k a
+      --   -> s
+      --   -> k a
       val = evalT res S.empty
+      -- hence, val :: k' (List a) = (OptionalT (Logger Chars)) (List a)
+      -- so, runOptional val :: (Logger Chars) (Optional(List a))
   in runOptionalT val
-
 
   -- runOptionalT (evalT (filtering (\a -> StateT (\s ->
   --   OptionalT (if a > 100
