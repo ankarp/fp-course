@@ -400,13 +400,25 @@ distinctG ::
 
 -- ankarp: study
 distinctG x =
-  runOptionalT (evalT (filtering (\a -> StateT (\s ->
-    OptionalT (if a > 100
-                 then
-                   log1 (fromString ("aborting > 100: " P.++ show a)) Empty
-                 else (if even a
-                   then log1 (fromString ("even number: " P.++ show a))
-                   else pure) (Full (a `S.notMember` s, a `S.insert` s))))) x) S.empty)
+  let f a = StateT (\s ->
+                      OptionalT (if a > 100
+                                 then
+                                   log1 (fromString ("aborting > 100: " P.++ show a)) Empty
+                                 else (if even a
+                                       then log1 (fromString ("even number: " P.++ show a))
+                                       else pure) (Full (a `S.notMember` s, a `S.insert` s))))
+      res = filtering f x
+      val = evalT res S.empty
+  in runOptionalT val
+
+
+  -- runOptionalT (evalT (filtering (\a -> StateT (\s ->
+  --   OptionalT (if a > 100
+  --                then
+  --                  log1 (fromString ("aborting > 100: " P.++ show a)) Empty
+  --                else (if even a
+  --                  then log1 (fromString ("even number: " P.++ show a))
+  --                  else pure) (Full (a `S.notMember` s, a `S.insert` s))))) x) S.empty)
 --distinctG =
 --  error "todo: Course.StateT#distinctG"
 
