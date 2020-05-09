@@ -225,8 +225,17 @@ distinctF ::
   (Ord a, Num a) =>
   List a
   -> Optional (List a)
-distinctF =
-  error "todo: Course.StateT#distinctF"
+distinctF aas =    -- aas :: List a
+  let init_state = S.empty :: S.Set a
+      -- k is State (S.Set a) Optional  :: * -> *
+      f :: (Ord a, Num a) => a -> StateT (S.Set a) Optional Bool  -- :: a -> k Bool
+      f a' =
+        let rs s'
+              | a' >= 100 = Empty
+              | otherwise = Full (not $ S.member a' s', S.insert a' s')
+        in StateT rs
+      res = filtering f aas   -- State (S.Set a) Optional (List a)
+  in evalT res init_state
 
 -- | An `OptionalT` is a functor of an `Optional` value.
 data OptionalT k a =
